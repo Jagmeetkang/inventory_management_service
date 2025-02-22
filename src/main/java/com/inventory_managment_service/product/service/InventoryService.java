@@ -3,7 +3,6 @@ package com.inventory_managment_service.product.service;
 import com.inventory_managment_service.product.model.Product;
 import com.inventory_managment_service.product.repository.ProductRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,8 +14,10 @@ public class InventoryService {
         this.productRepository = productRepository;
     }
 
-    public void addProduct(Product product) {
+    public Product addProduct(Product product) {
+        System.out.println(product.getStock());
         productRepository.save(product);
+        return product;
     }
 
    @Transactional
