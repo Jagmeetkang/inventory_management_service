@@ -12,6 +12,7 @@ public class ProductDtoMapper {
         product.setName(dto.getName());
         product.setSku(dto.getSku());
         product.setStock(dto.getStock());
+        product.setPrice(dto.getPrice());
         return product;
     }
 }

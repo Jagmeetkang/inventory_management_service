@@ -4,9 +4,12 @@ import com.inventory_managment_service.product.dto.ProductDTO;
 import com.inventory_managment_service.product.model.Product;
 import com.inventory_managment_service.product.service.InventoryService;
 import com.inventory_managment_service.product.util.ProductDtoMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/inventory")
@@ -20,69 +23,71 @@ public class InventoryController {
         this.productDtoMapper = productDtoMapper;
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<Product> addProduct(@RequestBody ProductDTO productDto){
-        Product product = productDtoMapper.productDtotoentity(productDto);
-        ResponseEntity<Product> productResponseEntity = null;
+    @GetMapping("/all")
+    public ResponseEntity<List<Product>> getAllProduct(){
         try{
-            Product addedProduct =  inventoryService.addProduct(product);
-            productResponseEntity = ResponseEntity
-                    .status(HttpStatusCode.valueOf(201))
-                    .header("Origin", "product-inventory")
-                    .header("message", "Product added successfully")
-                    .body(addedProduct);
-
-        }catch (Exception e){
-            Product product1 = new Product();
-            productResponseEntity = ResponseEntity
-                    .status(HttpStatusCode.valueOf(400))
-                    .header("Origin", "product-inventory")
-                    .header("message", e.getMessage())
-                    .body(product1);
+             List<Product> product = inventoryService.getAllProduct();
+             return new ResponseEntity<>(product, HttpStatus.OK);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return productResponseEntity;
+
+    }
+
+
+    @PostMapping("/add")
+    public ResponseEntity<String> addProduct(@RequestBody ProductDTO productDto) {
+        try {
+            Product product = productDtoMapper.productDtotoentity(productDto);
+            boolean productStatus = inventoryService.addProduct(product);
+            if(productStatus){
+                return ResponseEntity.ok("Product added successfully");
+            }else {
+                return ResponseEntity.badRequest().body("Product not added");
+            }
+        } catch (Exception e) {
+            // General exception handling
+            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
+        }
     }
 
     @PostMapping("/reserve")
-    public ResponseEntity<Boolean> reserveStock(@RequestParam String sku, @RequestParam int quantity){
-        ResponseEntity<Boolean> productReserveResponseEntity = null;
+    public ResponseEntity<String> reserveStock(@RequestParam String sku, @RequestParam int quantity){
         try{
-            Boolean reserveProduct = inventoryService.reserveStock(sku,quantity);
-            if(reserveProduct){
-                productReserveResponseEntity = ResponseEntity
-                        .status(HttpStatusCode.valueOf(201))
-                        .header("Origin", "product-inventory")
-                        .header("message", "Stock reserve Successfully")
-                        .body(reserveProduct);
-
-            }else {
-                productReserveResponseEntity = ResponseEntity
-                        .status(HttpStatusCode.valueOf(201))
-                        .header("Origin", "product-inventory")
-                        .header("message", "Not enough stock")
-                        .body(reserveProduct);
+            if(inventoryService.reserveStock(sku,quantity)){
+                return ResponseEntity.ok("Stock reserved successfully");
+            }else{
+                return ResponseEntity.badRequest().body("Stock not reserved");
             }
-
         }catch (Exception e){
-            Boolean reserveProduct1 = null;
-            productReserveResponseEntity = ResponseEntity
-                    .status(HttpStatusCode.valueOf(400))
-                    .header("Origin", "product-inventory")
-                    .header("message", e.getMessage())
-                    .body(reserveProduct1);
+            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
         }
-        return productReserveResponseEntity;
 
     }
 
+
     @PostMapping("/restore")
-    public String restoreStock(@RequestParam String sku,@RequestParam int quantity){
-        inventoryService.restoreStock(sku,quantity);
-        return "Stock restore Successfully";
+    public ResponseEntity<String> restoreStock(@RequestParam String sku,@RequestParam int quantity){
+        try{
+
+           if( inventoryService.restoreStock(sku,quantity)) {
+               return ResponseEntity.ok("Stock restored successfully");
+           }else {
+               return ResponseEntity.badRequest().body("Stock not restored");
+           }
+        }catch (Exception e){
+            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
+        }
+
     }
 
     @GetMapping("/stock")
-    public int getStock(@RequestParam String sku){
-        return inventoryService.getStock(sku);
+    public ResponseEntity<Integer> getStock(@RequestParam String sku){
+        try{
+            return ResponseEntity.ok(inventoryService.getStock(sku));
+        }catch (Exception e){
+            return ResponseEntity.status(500).body(-1);
+        }
+
     }
 }

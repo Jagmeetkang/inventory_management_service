@@ -13,6 +13,7 @@ public class ProductDTO {
     private String sku;
     private String name;
     private int stock;
+    private double price;
 
     public Long getId() {
         return id;
@@ -28,5 +29,9 @@ public class ProductDTO {
 
     public int getStock() {
         return stock;
+    }
+
+    public Double getPrice() {
+        return price;
     }
 }
